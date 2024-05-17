@@ -1,0 +1,61 @@
+[gd_scene load_steps=2 format=2]
+
+[sub_resource type="GDScript" id=1]
+script/source = "extends Node
+
+export var mod_name : String
+export var mod_author : String
+export var compatable_mods : Dictionary
+export var mod_version : String
+export var application_list : Dictionary
+
+func create_application(app_id):
+	_print(\"Creating application\")
+	if typeof(app_id) != TYPE_INT:
+		_print(\"ERROR: Application \" + str(app_id) + \"is not a valid integer value.\")
+		return
+	if get_tree().get_current_scene().get_node(\"Main\").has_node(str(app_id)):
+		_print(\"ERROR: Application conflict found with: \" + str(app_id))
+		_print(\"ERROR: Please change your application id, you can use an additional unique prefix in front of your application id.\")
+		return
+	
+	var node = Node2D.new()
+	node.name = str(app_id)
+	App.setNodeScale()
+	node.scale = Vars.get(\"nodeScale\")
+	get_tree().get_current_scene().get_node(\"Main\").add_child(node)
+	if Tab.data[\"open\"].size() <= app_id:
+		Tab.data[\"open\"].resize(app_id + 1)
+	if Tab.data[\"data\"].size() <= app_id:
+		Tab.data[\"data\"].resize(app_id + 1)
+	if Tab.data[\"pos\"].size() <= app_id:
+		Tab.data[\"pos\"].resize(app_id + 1)
+	Tab.data[\"open\"][app_id] = false
+	Tab.data[\"data\"][app_id] = 0
+	Tab.data[\"pos\"][app_id] = Vector2(0,0)
+	application_list[app_id] = node
+	_print(\"Created application: \" + str(app_id))
+	pass
+
+func remove_application(app_id):
+	_print(\"Removing application\")
+	if !get_tree().get_current_scene().get_node(\"Main\").has_node(str(app_id)):
+		_print(\"ERROR: application %s not found\" % app_id)
+		return
+	application_list.erase(app_id)
+	Tab.data[\"open\"][app_id] = null
+	Tab.data[\"data\"][app_id] = null
+	Tab.data[\"pos\"][app_id] = null
+	get_tree().get_current_scene().get_node(\"Main\").get_child(str(app_id)).queue_free()
+	_print(\"Removed application: %s\" % app_id)
+
+func _print(line):
+	print(\"[api - \"+ name +\"] \" + line)
+"
+
+[node name="Mod_NODE" type="Node"]
+script = SubResource( 1 )
+author = null
+compatable_mods = null
+version = null
+application_list = null
